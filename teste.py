@@ -22,11 +22,35 @@ def join_network(base_dir, num_dirs):
     if not os.path.exists(main_site):
         raise FileNotFoundError(f"Erro: Diretório {main_site} não encontrado. Execute o script na pasta correta.")
 
+
     print("Iniciando a rede Fabric existente...")
-    # os.chdir(main_site)
-    # subprocess.run(["./minifab", "up", "-e", "7000", "-n", "samplecc", "-p", ""], check=True)
-    # time.sleep(10)
-    # os.chdir(base_path)
+    os.chdir(main_site)
+    subprocess.run(["./minifab", "up", "-e", "7000", "-n", "samplecc", "-p", ""], check=True)
+    time.sleep(10)
+    os.chdir(base_path)
+
+    print("Consultando a configuração do canal...")
+    os.chdir(main_site)
+    subprocess.run(["./minifab", "channelquery"], check=True)
+    time.sleep(10)
+
+    json_file = "vars/mychannel_config.json"
+
+    # Verifica se o arquivo JSON foi criado
+    if not os.path.exists(json_file):
+         print(f"Erro: O arquivo {json_file} não foi encontrado! Verifique se o 'channelquery' foi bem-sucedido.")
+         exit(1)
+
+    print("Modificando a configuração do canal...")
+    subprocess.run(
+         f'jq \'.channel_group.groups.Application.policies.Admins.policy.value.rule = "ANY"\' {json_file} > temp.json && mv temp.json {json_file}', shell=True, check=True
+    )
+    time.sleep(10)
+
+    print("Aplicando atualização do canal...")
+    subprocess.run(["./minifab", "channelsign,channelupdate"], check=True)
+    time.sleep(10)
+
 
     base_port = 7200  # Porta inicial para mysite1
     
