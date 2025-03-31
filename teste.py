@@ -40,10 +40,11 @@ def join_network(base_dir, num_dirs):
     if not os.path.exists(json_file):
          print(f"Erro: O arquivo {json_file} não foi encontrado! Verifique se o 'channelquery' foi bem-sucedido.")
          exit(1)
-
     print("Modificando a configuração do canal...")
     subprocess.run(
-         f'jq \'.channel_group.groups.Application.policies.Admins.policy.value.rule = "ANY"\' {json_file} > temp.json && mv temp.json {json_file}', shell=True, check=True
+        f'jq \'.channel_group.groups.Application.policies.Admins.policy.value.rule = "ANY" | .channel_group.groups.Application.policies.Endorsement.policy.value.rule = "ANY" | .channel_group.groups.Application.policies.LifecycleEndorsement.policy.value.rule = "ANY"\' {json_file} > temp.json && mv temp.json {json_file}',
+        shell=True,
+        check=True
     )
     time.sleep(10)
 
@@ -107,7 +108,7 @@ def join_network(base_dir, num_dirs):
                 print(f"Aprovando em {site} sem commit...")
                 subprocess.run(["./minifab", "approve,discover"], check=True)
 
-            time.sleep(10)
+            time.sleep(20)
             os.chdir(base_path)
 
         print(f"Descobrindo chaincode na nova organização {new_site}...")
